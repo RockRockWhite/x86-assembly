@@ -14,26 +14,41 @@ xchg bx, bx
 ; mov bx, 4
 ; div bx
 
+; 进位加
+; clc
+; mov ax, [number1]
+; mov bx, [number2]
+
+; add ax, bx
+; mov [sum], ax
+
+; mov ax, [number1 + 2]
+; mov bx, [number2 + 2]
+; adc ax, bx
+
+; mov [sum + 2], ax
+
+; 借位减
 clc
+
 mov ax, [number1]
 mov bx, [number2]
-
-add ax, bx
-mov [sum], ax
+sub ax, bx
+mov [res], ax
 
 mov ax, [number1 + 2]
 mov bx, [number2 + 2]
-adc ax, bx
+sbb ax, bx
+mov [res + 2], ax
 
-mov [sum + 2], ax
 
 halt:
     jmp halt
 number1:
-    dd 0xcfff_ffff
+    dd 0x000c_0000
 number2:
-    dd 4
-sum:
+    dd 0x0000_ffff
+res:
     dd 0x0000_0000
 
 
