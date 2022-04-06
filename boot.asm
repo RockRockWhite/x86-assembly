@@ -5,6 +5,11 @@ int 0x10
 
 xchg bx, bx
 
+
+start:
+    ; jmp short start
+    ; jmp near start
+    jmp 0x0:0x7c00
 ; mov ax, 5
 ; mov bx, 7
 
