@@ -12,6 +12,8 @@ push byte 2
 push dword 7
 push word 5
 
+call print
+
 pop ax
 pop bx
 pop cx
@@ -20,11 +22,15 @@ halt:
     xchg bx, bx
     jmp halt
 print:
+    mov cx, 25
+loop:
     mov ax, 0xb800
     mov es, ax
     mov bx, [video]
-    mov [es:bx], '.'
-    dec word [video]
+    mov byte [es:bx], '.'
+    add word [video], 2
+    loop loop
+    push 1
     ret
 video:
     dw 0x0
