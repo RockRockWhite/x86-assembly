@@ -5,53 +5,37 @@ int 0x10
 
 xchg bx, bx
 
-offset equ 0x0000
-data equ 0x55aa
+; mov ax, 5
+; mov bx, 7
 
+; mul bx ; dx : ax = bx * ax
 
-mov ax, 0x1000
-mov ds, ax
+; ;dx : ax / oper = ax(商) - dx(余)
+; mov bx, 4
+; div bx
 
-mov ax, [offset]
-mov [offset], ax
+clc
+mov ax, [number1]
+mov bx, [number2]
 
-mov byte [offset], 0x10
+add ax, bx
+mov [sum], ax
 
-; 只要有bp参与就默认ss, 否则ds
-mov ax, [bx]
-mov ax, [bp] ;ss
-mov ax, [si]
-mov ax, [di]
+mov ax, [number1 + 2]
+mov bx, [number2 + 2]
+adc ax, bx
 
-mov ax, [bx +si + offset]
-mov ax, [bp +si + offset]
-mov ax, [bp +di + offset]
-
-; mov ax, 0xb800
-; mov es, ax
-
-; mov ax, 0
-; mov ds, ax
-
-; mov si, message
-; mov di, 0
-
-; mov cx, (message_end - message)
-
-; loop1:
-;     mov al, [ds:si]
-;     mov [es:di], al
-
-;     inc si
-;     add di, 2
-
-;     loop loop1
+mov [sum + 2], ax
 
 halt:
     jmp halt
-; message:
-;     db "hello, world", 0
-; message_end:
+number1:
+    dd 0xcfff_ffff
+number2:
+    dd 4
+sum:
+    dd 0x0000_0000
+
 
 times 510 - ($ - $$) db 0
 db 0x55, 0xaa
