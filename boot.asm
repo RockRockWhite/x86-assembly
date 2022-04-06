@@ -29,6 +29,7 @@ jmp halt
 
 
 div_err:
+    hlt
     iret
 
 intr:
