@@ -4,43 +4,28 @@ mov ax,3
 int 0x10
 
 xchg bx, bx
-mov ax, 0
-mov ss, ax
-mov sp, 0x7c00
+
+mov ax, 0x55aa
+mov bx, 0xaa55
+xor ax, bx
+xor ax, ax ; ax 寄存器清空
+mov ax, 0b1111_0010
+test ax, 0b0000_0001
+
+; 1111_0010
+; 0011_1100_1000
+; 0001_1110
+; 0100_0000_0001_1110
+
+shr ax, 5
+ror ax, 5
 
 
-mov cx, 0
-; call 0:func
-
-mov word [0x80 * 4], intr
-mov word [0x80 * 4 + 0x2], 0
-
-mov word [0x0], div_err
-mov word [0x2], 0
-
-mov dx, 0
-mov ax, 5
-mov bx, 0
-div bx
-
-int 0x80
-
-jmp halt
-
-
-div_err:
-    hlt
-    iret
-
-intr:
-    iret
-func:
-    retf
-function:
-    dw func, 0
 halt:
-    xchg bx, bx
+    hlt ; 关闭cpu, 等待外中断
     jmp halt
+data:
+    dw 0x55aa
 
 times 510 - ($ - $$) db 0
 db 0x55, 0xaa
