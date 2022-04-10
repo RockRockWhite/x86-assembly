@@ -5,119 +5,82 @@ int 0x10
 
 xchg bx, bx
 
-; 0 - > 0x1000
-mov dx, 0x1f2
-mov al, 1
-out dx, al
+mov edi, 0x1000
+mov bl, 4
+mov ecx, 2
+call read_disk
 
-mov al, 0
+jmp 0:0x1000 ; 跳转到loader
 
-inc dx ; 0x1f3
-out dx, al
+read_disk:
+    ; 读取硬盘
+    ; ecx - 存储起始扇区位置
+    ; bl - 存取扇区数量
+    ; edi - 数据存储内存位置
+    pushad ; 将8个通用寄存器都入栈
 
-inc dx ; 0x1f4
-out dx, al
+    mov dx, 0x1f2
+    mov al, bl
+    out dx, al ; 设置扇区位置
 
-inc dx ;0x1f5
-out dx, al
+    mov al, cl
+    inc dx ; 0x1f3
+    out dx, al ; 起始扇区低八位
 
-inc dx ;0x1f6
-mov al, 0b1110_0000
-out dx, al
+    shr ecx, 8
+    mov al, cl
+    inc dx ; 0x1f4
+    out dx, al ; 起始扇区中八位
 
-inc dx ;0x1f7
-mov al, 0x20 ;读硬盘
-out dx, al
+    shr ecx, 8
+    mov al, cl
+    inc dx ;0x1f5
+    out dx, al ; 起始扇区高八位
 
-; 读取硬盘状态
-.check_read_state:
-    nop
-    nop
-    nop ; 一点延迟
+    shr ecx, 8
+    and ecx, 0b1111 ; 取出最后4位
+    mov al, 0b1110_0000
+    or al, cl
+    inc dx ;0x1f6
+    out dx, al ; 1100+起始扇区的最后4位
 
-    in al, dx
-    and al, 0b1000_1000
-    cmp al, 0b0000_1000 ; 准备完毕
-    jnz .check_read_state
+    inc dx ;0x1f7
+    mov al, 0x20 ;读硬盘
+    out dx, al
 
-mov ax, 0x100
-mov es, ax
-mov di, 0
-mov dx, 0x1f0
+    ; 读取硬盘状态
+    .check:
+        nop
+        nop
+        nop ; 一点延迟
 
-.read_loop:
-    nop
-    nop
-    nop
-
-    in ax, dx
-    mov  [es:di], ax
-
-    add di, 2
-    cmp di, 512
-    jnz .read_loop
-
-
-
-
+        in al, dx
+        and al, 0b1000_1000
+        cmp al, 0b0000_1000 ; 准备完毕
+        jnz .check
 
 
+    xor eax, eax ; 清空ax
+    mov al, bl
+    mov dx, 256 ; 计算总字数
+    mul dx
+    mov cx, ax
 
-; 2 < - 0x1000
-mov dx, 0x1f2
-mov al, 1
-out dx, al ; 扇区 1
+    mov dx, 0x1f0
 
-mov al, 2
-inc dx ; 0x1f3
-out dx, al
+    .readw:
+        nop
+        nop
+        nop
 
-mov al, 0
-inc dx ; 0x1f4
-out dx, al
+        in ax, dx
+        mov  [edi], ax
 
-inc dx ;0x1f5
-out dx, al
+        add edi, 2
+        loop .readw
 
-inc dx ;0x1f6
-mov al, 0b1110_0000
-out dx, al
-
-inc dx ;0x1f7
-mov al, 0x30 ;读硬盘
-out dx, al
-
-mov ax, 0x100
-mov es, ax
-mov si, 0
-mov dx, 0x1f0
-.write_loop:
-    nop
-    nop
-    nop
-
-    mov ax, [es:si]
-    out dx, ax
-
-
-    add si, 2
-    cmp si, 512
-    jnz .write_loop
-
-; 写取硬盘状态
-mov dx, 0x1f7
-.check_write_state:
-    nop
-    nop
-    nop ; 一点延迟
-
-    in al, dx
-    and al, 0b1000_0000
-    cmp al, 0b1000_0000 ; 准备完毕
-    jz .check_write_state
-halt:
-    hlt ; 关闭cpu, 等待外中断
-    jmp halt
+    popad ; 将8个通用寄存器都推栈
+    ret
 
 times 510 - ($ - $$) db 0
 db 0x55, 0xaa
