@@ -48,39 +48,62 @@ read_disk:
     mov al, 0x20 ;读硬盘
     out dx, al
 
-    ; 读取硬盘状态
-    .check:
-        nop
-        nop
-        nop ; 一点延迟
-
-        in al, dx
-        and al, 0b1000_1000
-        cmp al, 0b0000_1000 ; 准备完毕
-        jnz .check
+    xor ecx, ecx ; 清空cx
+    mov cl, bl ; 设置循环次数
 
 
-    xor eax, eax ; 清空ax
-    mov al, bl
-    mov dx, 256 ; 计算总字数
-    mul dx
-    mov cx, ax
+.read:
+    call .waits
+    call .reads
 
-    mov dx, 0x1f0
+    xchg bx, bx
 
-    .readw:
-        nop
-        nop
-        nop
-
-        in ax, dx
-        mov  [edi], ax
-
-        add edi, 2
-        loop .readw
+    loop .read
 
     popad ; 将8个通用寄存器都推栈
     ret
+
+    .waits:
+        push dx
+        push ax
+
+        mov dx, 0x1f7
+        ; 读取硬盘状态
+        .check:
+            nop
+            nop
+            nop ; 一点延迟
+
+            in al, dx
+            and al, 0b1000_1000
+            cmp al, 0b0000_1000 ; 准备完毕 
+            jnz .check
+
+        pop ax
+        pop dx
+        ret
+
+    .reads: ; 读取一个扇区
+        push cx
+        push dx
+
+        mov cx, 256
+        mov dx, 0x1f0
+
+        .readw:
+            nop
+            nop
+            nop
+
+            in ax, dx
+            mov  [edi], ax
+
+            add edi, 2
+            loop .readw
+
+        pop dx
+        pop cx
+        ret
 
 times 510 - ($ - $$) db 0
 db 0x55, 0xaa
