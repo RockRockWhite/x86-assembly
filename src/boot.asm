@@ -56,8 +56,6 @@ read_disk:
     call .waits
     call .reads
 
-    xchg bx, bx
-
     loop .read
 
     popad ; 将8个通用寄存器都推栈

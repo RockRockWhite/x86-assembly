@@ -1,10 +1,44 @@
 [org 0x1000]
 
-xchg bx, bx;
-mov ax, 0xb800
-mov es, ax
-mov di, 0
-mov byte [es:di], 'H'
-
 xchg bx, bx
+
+check_memory: ; 内存检测
+    mov ax, 0
+    mov es, ax
+
+    xor ebx, ebx
+    mov edx, 0x534d4150
+
+    mov di, ards_buffer
+
+.next:
+    mov eax, 0xe820
+    mov ecx, 20
+
+    int 0x15
+
+    jc .error
+
+    add di, cx
+    inc word [ards_count]
+    cmp ebx, 0
+    jnz .next
+
+    mov cx, [ards_count]
+    mov si, 0
+.show:
+    mov eax, [si + ards_buffer]
+    mov ebx, [si + ards_buffer + 8]
+    mov edx, [si + ards_buffer + 16]
+
+    add si, 20
+    xchg bx, bx
+    loop .show
+
+.error:
+
 jmp $
+
+ards_count:
+    dw 0
+ards_buffer:
